@@ -25,7 +25,8 @@ import {
   FileDown,
   Type
 } from 'lucide-react';
-import html2pdf from 'html2pdf.js';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const apiKey = "AIzaSyA4mutY-tgoUv9M6FcniNwBkOKVxOVjKi8";
 
@@ -66,25 +67,48 @@ const App = () => {
 
   const downloadPDF = async () => {
     setIsDownloading(true);
-    const element = document.getElementById('coa-document');
-
-    const opt = {
-      margin: [0, 0, 0, 0],
-      filename: getSafeFileName('pdf'),
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: 3,
-        useCORS: true,
-        letterRendering: true
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'] }
-    };
+    setError(null);
 
     try {
-      await html2pdf().set(opt).from(element).save();
+      const element = document.getElementById('coa-document');
+
+      // Create canvas from HTML element
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+
+      // Calculate dimensions for A4
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      // Create PDF
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+      // Add image to PDF
+      pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+
+      // If content is longer than one page, add more pages
+      let heightLeft = imgHeight - pageHeight;
+      let position = -pageHeight;
+
+      while (heightLeft > 0) {
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        position -= pageHeight;
+      }
+
+      // Save the PDF
+      pdf.save(getSafeFileName('pdf'));
     } catch (err) {
-      setError("Download error. Please use Browser Print (Ctrl+P) for an editable PDF.");
+      console.error('PDF generation error:', err);
+      setError("PDF generation failed. Please try again.");
     } finally {
       setIsDownloading(false);
     }
