@@ -25,6 +25,7 @@ import {
   FileDown,
   Type
 } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
 
 const apiKey = "AIzaSyA4mutY-tgoUv9M6FcniNwBkOKVxOVjKi8";
 
@@ -47,19 +48,14 @@ const App = () => {
   const [showBrandingPanel, setShowBrandingPanel] = useState(false);
 
   useEffect(() => {
-    const libraries = [
-      'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
-      'https://unpkg.com/html-docx-js/dist/html-docx.js'
-    ];
-
-    libraries.forEach(src => {
-      if (!document.querySelector(`script[src="${src}"]`)) {
-        const script = document.createElement('script');
-        script.src = src;
-        script.async = true;
-        document.head.appendChild(script);
-      }
-    });
+    // Load Word converter from CDN
+    const src = 'https://unpkg.com/html-docx-js/dist/html-docx.js';
+    if (!document.querySelector(`script[src="${src}"]`)) {
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      document.head.appendChild(script);
+    }
   }, []);
 
   const getSafeFileName = (extension) => {
@@ -69,11 +65,6 @@ const App = () => {
   };
 
   const downloadPDF = async () => {
-    if (!window.html2pdf) {
-      setError("PDF engine is loading. Please wait 2 seconds.");
-      return;
-    }
-
     setIsDownloading(true);
     const element = document.getElementById('coa-document');
 
@@ -91,7 +82,7 @@ const App = () => {
     };
 
     try {
-      await window.html2pdf().set(opt).from(element).save();
+      await html2pdf().set(opt).from(element).save();
     } catch (err) {
       setError("Download error. Please use Browser Print (Ctrl+P) for an editable PDF.");
     } finally {
