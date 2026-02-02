@@ -71,69 +71,69 @@ const App = () => {
 
     try {
       const element = document.getElementById('coa-document');
+      const filename = getSafeFileName('pdf');
 
-      // Create canvas from HTML element with oklch color fix
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        // Fix for Tailwind CSS v4 oklch colors - convert them before rendering
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.getElementById('coa-document');
-          if (clonedElement) {
-            // Walk through all elements and fix oklch colors
-            const allElements = clonedElement.querySelectorAll('*');
-            allElements.forEach(el => {
-              const computed = window.getComputedStyle(el);
-              // Override colors with hex equivalents
-              if (computed.color.includes('oklch')) {
-                el.style.color = '#000000';
-              }
-              if (computed.backgroundColor.includes('oklch')) {
-                el.style.backgroundColor = '#ffffff';
-              }
-              if (computed.borderColor.includes('oklch')) {
-                el.style.borderColor = '#cbd5e1';
-              }
-            });
-            // Also fix the main element
-            clonedElement.style.color = '#000000';
-            clonedElement.style.backgroundColor = '#ffffff';
+      // Create a new window with just the CoA document for printing
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+
+      // Get all stylesheets from current page
+      const styles = Array.from(document.styleSheets)
+        .map(sheet => {
+          try {
+            return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
+          } catch (e) {
+            return '';
           }
-        }
-      });
+        })
+        .join('\n');
 
-      // Calculate dimensions for A4
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // Create print document
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${filename}</title>
+          <style>
+            ${styles}
+            @page { size: A4; margin: 0; }
+            @media print {
+              body { margin: 0; padding: 0; }
+              #coa-document { 
+                width: 210mm !important; 
+                min-height: 297mm !important;
+                padding: 8mm !important;
+                box-shadow: none !important;
+                border: none !important;
+              }
+            }
+            body { 
+              margin: 0; 
+              padding: 0; 
+              display: flex; 
+              justify-content: center;
+              background: white;
+            }
+          </style>
+        </head>
+        <body>
+          ${element.outerHTML}
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.onafterprint = function() { window.close(); };
+              }, 500);
+            };
+          </script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
 
-      // Create PDF
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-      // Add image to PDF
-      pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
-
-      // If content is longer than one page, add more pages
-      let heightLeft = imgHeight - pageHeight;
-      let position = -pageHeight;
-
-      while (heightLeft > 0) {
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-        position -= pageHeight;
-      }
-
-      // Save the PDF
-      pdf.save(getSafeFileName('pdf'));
+      setIsDownloading(false);
     } catch (err) {
       console.error('PDF generation error:', err);
       setError("PDF generation failed. Please try again.");
-    } finally {
       setIsDownloading(false);
     }
   };
