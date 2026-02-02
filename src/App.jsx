@@ -72,13 +72,37 @@ const App = () => {
     try {
       const element = document.getElementById('coa-document');
 
-      // Create canvas from HTML element
+      // Create canvas from HTML element with oklch color fix
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        logging: false
+        logging: false,
+        // Fix for Tailwind CSS v4 oklch colors - convert them before rendering
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.getElementById('coa-document');
+          if (clonedElement) {
+            // Walk through all elements and fix oklch colors
+            const allElements = clonedElement.querySelectorAll('*');
+            allElements.forEach(el => {
+              const computed = window.getComputedStyle(el);
+              // Override colors with hex equivalents
+              if (computed.color.includes('oklch')) {
+                el.style.color = '#000000';
+              }
+              if (computed.backgroundColor.includes('oklch')) {
+                el.style.backgroundColor = '#ffffff';
+              }
+              if (computed.borderColor.includes('oklch')) {
+                el.style.borderColor = '#cbd5e1';
+              }
+            });
+            // Also fix the main element
+            clonedElement.style.color = '#000000';
+            clonedElement.style.backgroundColor = '#ffffff';
+          }
+        }
       });
 
       // Calculate dimensions for A4
