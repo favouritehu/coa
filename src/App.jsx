@@ -194,6 +194,44 @@ const App = () => {
           .coa-page { padding: 8mm !important; border: none !important; box-shadow: none !important; } 
           .print-hidden { display: none !important; }
         }
+        /* Force standard colors for PDF generation (html2canvas doesn't support oklch) */
+        #coa-document, #coa-document * {
+          --tw-text-opacity: 1;
+          --tw-bg-opacity: 1;
+          --tw-border-opacity: 1;
+        }
+        #coa-document {
+          color: #020617 !important;
+          background-color: #ffffff !important;
+        }
+        #coa-document .text-slate-950 { color: #020617 !important; }
+        #coa-document .text-slate-900 { color: #0f172a !important; }
+        #coa-document .text-slate-800 { color: #1e293b !important; }
+        #coa-document .text-slate-700 { color: #334155 !important; }
+        #coa-document .text-slate-600 { color: #475569 !important; }
+        #coa-document .text-slate-500 { color: #64748b !important; }
+        #coa-document .text-slate-400 { color: #94a3b8 !important; }
+        #coa-document .text-slate-300 { color: #cbd5e1 !important; }
+        #coa-document .text-blue-600 { color: #2563eb !important; }
+        #coa-document .text-blue-400 { color: #60a5fa !important; }
+        #coa-document .text-blue-800 { color: #1e40af !important; }
+        #coa-document .text-emerald-600 { color: #059669 !important; }
+        #coa-document .text-emerald-800 { color: #065f46 !important; }
+        #coa-document .text-red-800 { color: #991b1b !important; }
+        #coa-document .text-white { color: #ffffff !important; }
+        #coa-document .bg-white { background-color: #ffffff !important; }
+        #coa-document .bg-slate-900 { background-color: #0f172a !important; }
+        #coa-document .bg-slate-50 { background-color: #f8fafc !important; }
+        #coa-document .bg-emerald-50 { background-color: #ecfdf5 !important; }
+        #coa-document .bg-red-50 { background-color: #fef2f2 !important; }
+        #coa-document .border-slate-900 { border-color: #0f172a !important; }
+        #coa-document .border-slate-300 { border-color: #cbd5e1 !important; }
+        #coa-document .border-slate-200 { border-color: #e2e8f0 !important; }
+        #coa-document .border-slate-100 { border-color: #f1f5f9 !important; }
+        #coa-document .border-blue-600 { border-color: #2563eb !important; }
+        #coa-document .border-emerald-200 { border-color: #a7f3d0 !important; }
+        #coa-document .border-red-200 { border-color: #fecaca !important; }
+        #coa-document .divide-slate-300 > * + * { border-color: #cbd5e1 !important; }
       `}</style>
 
       {/* Navbar */}
